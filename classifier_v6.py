@@ -2,16 +2,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, RandomForestClassifier
-from sklearn.model_selection import train_test_split, StratifiedShuffleSplit, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import StratifiedShuffleSplit, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import GaussianNB
 from imblearn.over_sampling import SMOTE
 import warnings
 warnings.filterwarnings("ignore")
@@ -31,10 +29,10 @@ y = df['Attack']
 
 X = pd.get_dummies(X, columns=['Source IP', 'Destination IP', 'Protocol'], drop_first=True)
 
-pca = PCA(n_components=0.95) 
+pca = PCA(n_components=0.95)
 X_pca = pca.fit_transform(X)
 
-selector = SelectKBest(score_func=f_classif, k=10)
+selector = SelectKBest(score_func=f_classif, k=10) 
 X_kbest = selector.fit_transform(X, y)
 
 smote = SMOTE(random_state=42)
@@ -55,11 +53,6 @@ models = {
         'min_samples_split': [2, 5, 10],
         'min_samples_leaf': [1, 2, 4]
     }),
-    'Logistic Regression': (LogisticRegression(random_state=42), {
-        'C': [0.01, 0.1, 1, 10, 100],
-        'penalty': ['l2']
-    }),
-    'Naive Bayes': (GaussianNB(), {}),
     'Random Forest': (RandomForestClassifier(random_state=42), {
         'n_estimators': [50, 100, 200],
         'max_depth': [5, 10, 15, 20],
@@ -69,14 +62,6 @@ models = {
     'KNN': (KNeighborsClassifier(), {
         'n_neighbors': [3, 5, 7, 9],
         'weights': ['uniform', 'distance']
-    }),
-    'Bagging': (BaggingClassifier(estimator=DecisionTreeClassifier(), random_state=42), {
-        'n_estimators': [10, 50, 100],
-        'estimator__max_depth': [5, 10, 15]
-    }),
-    'AdaBoost': (AdaBoostClassifier(estimator=DecisionTreeClassifier(), random_state=42), {
-        'n_estimators': [50, 100, 200],
-        'learning_rate': [0.01, 0.1, 1]
     })
 }
 
@@ -115,11 +100,3 @@ for model_name, (model, params) in models.items():
         plt.title('Árvore de Decisão')
         plt.show()
     plot_confusion_matrix(confusion, labels)
-
-plt.figure(figsize=(12, 6))
-sns.scatterplot(x='Packet Rate', y='Bytes Sent', hue='Attack', data=df, palette=['blue', 'red'], alpha=0.7)
-plt.title('Distribuição das Amostras')
-plt.xlabel('Packet Rate')
-plt.ylabel('Bytes Sent')
-plt.legend(['Normal', 'Attack'])
-plt.show()
